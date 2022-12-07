@@ -1,0 +1,80 @@
+# Check this for reference: https://github.com/hashicorp/vault-helm/blob/main/values.yaml
+global:
+  enabled: false
+  tlsDisable: false
+server:
+  enabled: true
+  extraEnvironmentVars:
+      VAULT_CACERT: /vault/userconfig/vault-ha-tls/ca.crt
+      VAULT_TLSCERT: /vault/userconfig/vault-ha-tls/tls.crt
+      VAULT_TLSKEY: /vault/userconfig/vault-ha-tls/tls.key
+  # [Enterprise Only] This value refers to a Kubernetes secret that you have
+  # created that contains your enterprise license. If you are not using an
+  # enterprise image or if you plan to introduce the license key via another
+  # route, then leave secretName blank ("") or set it to null.
+  # Requires Vault Enterprise 1.8 or later.
+  # enterpriseLicense:
+    # The name of the Kubernetes secret that holds the enterprise license. The
+    # secret must be in the same namespace that Vault is installed into.
+    # secretName: ""
+    # The key within the Kubernetes secret that holds the enterprise license.
+    # secretKey: "license"
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 250m
+    limits:
+      memory: 256Mi
+      cpu: 250m
+  dataStorage:
+    enabled: true
+    # Adjust volume size accordingly
+    size: 1Gi
+    mountPath: "/vault/data"
+    # Name of the storage class to use.  If null it will use the
+    # configured default Storage Class.
+    # storageClass: null
+    accessMode: ReadWriteOnce
+    annotations: {}
+  auditStorage:
+    enabled: true
+    # Adjust volume size accordingly
+    size: 1Gi
+    mountPath: "/vault/audit"
+    # Name of the storage class to use.  If null it will use the
+    # configured default Storage Class.
+    # storageClass: null
+    # Access Mode of the storage device being used for the PVC
+    accessMode: ReadWriteOnce
+    annotations: {}
+  # Needs refinement for affinity/anti-affinity
+  affinity: ""
+  volumes:
+    - name: userconfig-vault-ha-tls
+      secret:
+        defaultMode: 420
+        secretName: vault-ha-tls
+  volumeMounts:
+    - mountPath: /vault/userconfig/vault-ha-tls
+      name: userconfig-vault-ha-tls
+      readOnly: true
+  ha:
+    enabled: true
+    replicas: 3
+    raft: 
+      enabled: true
+      setNodeId: true
+      config: |
+        ui = true
+        listener "tcp" {
+            tls_disable = 0
+            address = "[::]:8200"
+            cluster_address = "[::]:8201"
+            tls_cert_file = "/vault/userconfig/vault-ha-tls/tls.crt"
+            tls_key_file  = "/vault/userconfig/vault-ha-tls/tls.key"
+            tls_client_ca_file = "/vault/userconfig/vault-ha-tls/ca.crt"
+        }
+        storage "raft" {
+            path = "/vault/data"
+        }
+        service_registration "kubernetes" {}
