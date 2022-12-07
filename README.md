@@ -23,7 +23,7 @@ Using [Kind](https://kind.sigs.k8s.io/) for Kubernetes.
 make kind-create-cluster
 ```
 
-### Allow a couple of minutes while cluster nodes are in `Running` state:
+Allow a couple of minutes while cluster nodes are in `Running` state:
 ```shell
 kubectl get no
 ```
@@ -94,7 +94,7 @@ kubectl -n vault exec vault-0 -- vault operator raft list-peers
 
 You now have a 3 node cluster with HA and TLS. You can now play with it by creating secrets, auth backends, etc. Enjoy!!
 
-## Create and read a secret
+## [Optional] Create and read a secret
 
 ### Shell at `vault-0` pod
 ```shell
